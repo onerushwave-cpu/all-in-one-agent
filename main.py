@@ -2,6 +2,8 @@ import speech_recognition as sr
 import pyttsx3
 import nltk
 
+from google_calendar import authenticate, get_events
+
 # Initialize speech recognition and text-to-speech engines
 r = sr.Recognizer()
 engine = pyttsx3.init()
@@ -22,6 +24,21 @@ def handle_voice_input():
         # Generate a response
         if "hello" in text.lower():
             engine.say("Hello! How can I assist you today?")
+        elif "what's my schedule" in text.lower():
+            try:
+                service = authenticate()
+                events = get_events(service)
+            except Exception as e:
+                print("Calendar error:", e)
+                engine.say("Sorry, I couldn't reach your calendar.")
+            else:
+                # Respond with the events
+                if events:
+                    engine.say("You have the following events:")
+                    for event in events:
+                        engine.say(event.get('summary', 'an untitled event'))
+                else:
+                    engine.say("You have no upcoming events.")
         elif "goodbye" in text.lower():
             engine.say("Goodbye! It was nice chatting with you.")
             engine.runAndWait()

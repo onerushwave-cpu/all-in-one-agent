@@ -34,16 +34,21 @@ def authenticate():
     return service
 
 
+def get_events(service, max_results=10):
+    """Return the upcoming events from the primary calendar."""
+    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    events_result = service.events().list(calendarId='primary', timeMin=now,
+                                          maxResults=max_results,
+                                          singleEvents=True,
+                                          orderBy='startTime').execute()
+    return events_result.get('items', [])
+
+
 def main():
     service = authenticate()
 
-    # Call the Calendar API
-    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     print('Getting the upcoming 10 events')
-    events_result = service.events().list(calendarId='primary', timeMin=now,
-                                          maxResults=10, singleEvents=True,
-                                          orderBy='startTime').execute()
-    events = events_result.get('items', [])
+    events = get_events(service)
 
     if not events:
         print('No upcoming events found.')
