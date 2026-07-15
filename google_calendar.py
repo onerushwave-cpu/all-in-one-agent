@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -33,26 +34,23 @@ def authenticate():
     return service
 
 
-def get_upcoming_events(service, max_results=10):
-    """Return the next ``max_results`` events from the primary calendar."""
-    from datetime import datetime, timezone
-
-    now = datetime.now(timezone.utc).isoformat()
-    result = service.events().list(
-        calendarId='primary',
-        timeMin=now,
-        maxResults=max_results,
-        singleEvents=True,
-        orderBy='startTime',
-    ).execute()
-    return result.get('items', [])
-
-
-if __name__ == '__main__':
+def main():
     service = authenticate()
-    events = get_upcoming_events(service)
+
+    # Call the Calendar API
+    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    print('Getting the upcoming 10 events')
+    events_result = service.events().list(calendarId='primary', timeMin=now,
+                                          maxResults=10, singleEvents=True,
+                                          orderBy='startTime').execute()
+    events = events_result.get('items', [])
+
     if not events:
         print('No upcoming events found.')
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event.get('summary', '(no title)'))
+
+
+if __name__ == '__main__':
+    main()
